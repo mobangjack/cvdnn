@@ -1,0 +1,1 @@
+python cvdnn.py -i images/eagle.png -p bvlc_googlenet.prototxt -m bvlc_googlenet.caffemodel -l synset_words.txt
