@@ -24,6 +24,9 @@ if (cap.isOpened() == False) :
    print("ERROR: Fail to capture")
    exit(0)
 
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 224)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 224)
+
 rows = open(args["labels"]).read().strip().split("\n")
 classes = [r[r.find(" ") + 1:].split(",")[0] for r in rows]
 
@@ -33,9 +36,9 @@ net = cv2.dnn.readNetFromCaffe(args["prototxt"], args["model"])
 while True:
    ret, image = cap.read()
    if (image is None) : break
-   cv2.imshow("Image", image)
-   cv2.waitKey(1)
-   '''
+   # cv2.imshow("Image", image)
+   # cv2.waitKey(1)
+   
    blob = cv2.dnn.blobFromImage(image, 1, (224, 224), (104, 117, 123))
    
    net.setInput(blob)
@@ -56,7 +59,7 @@ while True:
 
    cv2.imshow("Image", image)
    cv2.waitKey(1)
-   '''
+   
 cv2.waitKey(0)
 cap.release()
 cv2.destroyAllWindows()
