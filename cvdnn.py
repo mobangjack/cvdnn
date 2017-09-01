@@ -1,3 +1,6 @@
+# please refer to: http://www.pyimagesearch.com/2017/08/21/deep-learning-with-opencv/
+# for detail
+
 import numpy as np
 import argparse as ap
 import time
