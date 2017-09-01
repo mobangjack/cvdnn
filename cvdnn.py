@@ -51,7 +51,7 @@ while True:
    idxs = np.argsort(preds[0])[::-1][:3]
    for (i, idx) in enumerate(idxs):
 	   if i == 0:
-		   text = "Label: {}, {:.2f}%".format(classes[idx], preds[0][idx])
+		   text = "Label: {}, {:.2f}".format(classes[idx], preds[0][idx])
 		   cv2.putText(image, text, (5, 25),  cv2.FONT_HERSHEY_SIMPLEX,
 			   0.7, (0, 0, 255), 2)
 	   print("[INFO] {}. label: {}, probability: {:.5}".format(i + 1,

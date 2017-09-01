@@ -38,9 +38,12 @@ int main(int argc, char** argv)
 		size_t label_beg_idx = line.find(" ") + 1;
 		size_t label_end_idx = line.find(",", label_beg_idx + 1);
 		if (label_end_idx == std::string::npos) label_end_idx = line.length();
-		std::string label = line.substr(label_beg_idx, label_end_idx);
+		size_t label_len = label_end_idx - label_beg_idx;
+		std::string label = line.substr(label_beg_idx, label_len);
 		labels.push_back(label);
 	}
+	
+	label_stream.close();
 
 	cv::Mat image = cv::imread(image_path);
 	
@@ -63,14 +66,14 @@ int main(int argc, char** argv)
 	t = (cv::getTickCount() - t) * 1000.0 / cv::getTickFrequency();
 
 	// show forward time cost
-	std::cout << "[INFO] forward time cost: " << (int)t << "ms" << std::endl;
+	std::cout << "[INFO] Forward time cost: " << (int)t << "ms" << std::endl;
 	
 	// debug
 	//std::cout << "[INFO] probs.rows: " << probs.rows << ", probs.cols: " << probs.cols << std::endl;
 
 	// sort result
 	cv::Mat idxs; // = probs.reshape(1, 1);
-	cv::sortIdx(probs, idxs, CV_SORT_EVERY_ROW + cv::SORT_DESCENDING);
+	cv::sortIdx(probs, idxs, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
 
 	// debug
 	//std::cout << "[INFO] idxs.rows: " << idxs.rows << ", idxs.cols: " << idxs.cols << std::endl;
@@ -80,19 +83,22 @@ int main(int argc, char** argv)
 	{
 		int idx = idxs.at<int>(0, i);
 		std::string label = labels[idx];
-		double prob = probs.at<double>(0, idx);
+		float prob = probs.at<float>(0, idx);
 
 		std::stringstream ss;
 		ss << label << ": " << prob;
 		std::string text = ss.str();
 
-		std::cout << "[INFO] " << i << ". " << text << std::endl;
-
-		cv::putText(image, text, cv::Size(5, 25), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
+		std::cout << "[INFO] " << (i + 1) << ". " << text << std::endl;
+		
+		if (i == 0)
+			cv::putText(image, text, cv::Size(5, 25), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
 	}
 
 	cv::imshow("cvdnn", image);
 	cv::waitKey(0);
+	
+	cv::destroyAllWindows();
 
 	return 0;
 }
