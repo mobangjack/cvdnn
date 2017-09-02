@@ -18,35 +18,23 @@
 #include <opencv2/dnn.hpp>
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <sstream>
+#include <vector>
 
+// command line help
 void help()
 {
 	std::cout << "Usage: cvdnn <image> <proto> <model> <label>" << std::endl;
 }
 
-int main(int argc, char** argv)
+// load labels from file
+bool load_labels(const std::string& path, std::vector<std::string>& labels)
 {
-	if (argc != 5)
-	{
-		help();
-		return -1;
-	}
-   std::string image_path(argv[1]);
-   std::string proto_path(argv[2]);
-   std::string model_path(argv[3]);
-   std::string label_path(argv[4]);
-	
-	std::ifstream label_stream(argv[4]);
+   std::ifstream label_stream(path.c_str());
+   
 	if (!label_stream)
-	{
-		std::cout << "ERROR: cannot open label file: " << label_path << std::endl;
-		return -1;
-	}
+		return false;
 
-	std::vector<std::string> labels;
-	
 	while (!label_stream.eof())
 	{
 		std::string line;
@@ -60,8 +48,39 @@ int main(int argc, char** argv)
 	}
 	
 	label_stream.close();
+	
+	return true;
+}
 
+int main(int argc, char** argv)
+{
+   if (argc != 5)
+   {
+	   help();
+	   return -1;
+   }
+	
+	// std string for each argument
+   std::string image_path(argv[1]);
+   std::string proto_path(argv[2]);
+   std::string model_path(argv[3]);
+   std::string label_path(argv[4]);
+	
+	// load labels from file
+	std::vector<std::string> labels;
+	if (!load_labels(label_path, labels))
+	{
+	   std::cout << "ERROR: cannot open label file: " << label_path << std::endl;
+	   return -1;
+	}
+
+   // read image
 	cv::Mat image = cv::imread(image_path);
+	if (image.empty())
+	{
+	   std::cout << "ERROR: cannot open image file: " << image_path << std::endl;
+	   return -1;
+	}
 	
 	// create blob from image
 	cv::Mat blob = cv::dnn::blobFromImage(image, 1, cv::Size(224, 224), cv::Scalar(104, 117, 123));
@@ -72,23 +91,23 @@ int main(int argc, char** argv)
 	// set net input
 	net.setInput(blob);
 
-	// time token for benchmark
+	// time tick before forwarding
 	double t = cv::getTickCount();
 
 	// forward
 	cv::Mat probs = net.forward();
 	
 	// calculate time cost
-	t = (cv::getTickCount() - t) * 1000.0 / cv::getTickFrequency();
+	t = (cv::getTickCount() - t) / cv::getTickFrequency();
 
 	// show forward time cost
-	std::cout << "[INFO] Forward time cost: " << (int)t << "ms" << std::endl;
+	std::cout << "[INFO] classification took " << (int)t << " seconds" << std::endl;
 	
 	// debug
 	//std::cout << "[INFO] probs.rows: " << probs.rows << ", probs.cols: " << probs.cols << std::endl;
 
 	// sort result
-	cv::Mat idxs; // = probs.reshape(1, 1);
+	cv::Mat idxs;
 	cv::sortIdx(probs, idxs, cv::SORT_EVERY_ROW + cv::SORT_DESCENDING);
 
 	// debug
@@ -111,10 +130,12 @@ int main(int argc, char** argv)
 			cv::putText(image, text, cv::Size(5, 25), cv::FONT_HERSHEY_SIMPLEX, 0.7, cv::Scalar(0, 0, 255), 2);
 	}
 
-	cv::imshow("cvdnn", image);
+	cv::imshow("cvdnn_cpp", image);
 	cv::waitKey(0);
 	
 	cv::destroyAllWindows();
 
 	return 0;
 }
+
+// end of file
